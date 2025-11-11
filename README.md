@@ -23,6 +23,7 @@ Then, set up the TAP interface using the provided script:
 
 ```bash
 $ ./tools/net-tools/net-setup.sh start
+```
 
 This script creates and configures the zeth TAP device on the host.
 
