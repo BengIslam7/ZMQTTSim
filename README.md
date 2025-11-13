@@ -170,3 +170,42 @@ rm -rf build
 ```
 
 ---
+
+## 📦 CI/CD Pipeline
+
+This project includes a GitHub Actions CI/CD pipeline that automatically builds and optionally releases firmware for Zephyr boards.
+
+### Workflow Triggers
+
+The pipeline runs on:
+
+* Pushes to `main` or `develop` branches.
+* Pushes of tags matching `v*.*.*`.
+* Pull requests targeting `main` or `develop`.
+* Manual workflow dispatch.
+
+### Jobs
+
+1. **Build**:
+
+   * Checks out the repository.
+   * Installs host dependencies (CMake, Ninja, Python, etc.).
+   * Sets up a Python virtual environment and installs `west`.
+   * Initializes the Zephyr workspace and installs required packages and SDK.
+   * Builds the firmware for the specified board(s) (`native_sim` by default).
+   * Uploads the firmware artifacts (`zephyr.exe` and `zephyr.elf`).
+
+2. **Release**:
+
+   * Downloads the firmware artifact from the build job.
+   * Creates a GitHub Release and attaches the firmware files.
+
+> ⚠️ Adjust `matrix:board:[]` in `.github/workflows/ci-cd.yml` for additional boards as needed.
+
+---
+
+## 📝 Notes
+
+* The `native_sim` board is ideal for testing Zephyr applications on your host without hardware.
+* To build for a real board, replace `native_sim` with your board name (e.g., `nucleo_f746zg`).
+* The CI/CD workflow ensures your firmware is automatically built and optionally released on GitHub.
