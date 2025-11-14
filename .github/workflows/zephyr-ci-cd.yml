@@ -62,6 +62,14 @@ jobs:
       - name: Check build output
         run: ls -l $GITHUB_WORKSPACE/build/zephyr
 
+      - name: Setup TAP interface 
+        run: | 
+          source ~/zephyrproject/.venv/bin/activate 
+          cd ~/zephyrproject/tools/net-tools 
+          sed -i 's/^IPV4_ADDR_1=.*/IPV4_ADDR_1="192.168.1.100\/24"/' zeth.conf 
+          sed -i 's/^IPV4_ROUTE_1=.*/IPV4_ROUTE_1="192.168.1.1\/24"/' zeth.conf 
+          ./net-setup.sh start
+
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
@@ -124,5 +132,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test_results_native_sim
-          path: build/zephyr/tc_output.xml
+          path: tc_output.xml
 
