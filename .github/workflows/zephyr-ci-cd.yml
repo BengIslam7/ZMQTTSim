@@ -96,23 +96,17 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Download firmware artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: zephyr_firmware_native_sim
+
       - name: Install and start MQTT broker
         run: |
           sudo apt update
           sudo apt install -y mosquitto mosquitto-clients
           sudo systemctl enable mosquitto
           sudo systemctl start mosquitto
-
-      - name: Run TAP interface script
-        run: |
-          source ~/zephyrproject/.venv/bin/activate
-          cd ~/zephyrproject/tools/net-tools
-          ./net-setup.sh start
-
-      - name: Download firmware artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: zephyr_firmware_native_sim
 
       - name: Run native_sim test with MQTT publisher
         run: |
