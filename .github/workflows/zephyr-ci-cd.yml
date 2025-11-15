@@ -70,6 +70,29 @@ jobs:
           sed -i 's/^IPV4_ROUTE_1=.*/IPV4_ROUTE_1="192.168.1.1\/24"/' zeth.conf 
           ./net-setup.sh start
           cat zeth.conf
+      
+      - name: Install and start MQTT broker
+        run: |
+          sudo apt update
+          sudo apt install -y mosquitto mosquitto-clients
+          sudo systemctl enable mosquitto
+          sudo systemctl start mosquitto
+
+      - name: Run native_sim test with MQTT publisher
+        run: |
+          # Start the MQTT publisher in background
+          timeout 10 bash -c 'while true; do
+            mosquitto_pub -h 192.168.1.100 -t rtest -m "Hello from loop $(date +%T)"
+            sleep 1
+          done' &
+
+          source ~/zephyrproject/.venv/bin/activate
+          export ZEPHYR_BASE=~/zephyrproject/zephyr
+          cd $GITHUB_WORKSPACE
+          
+          # Run the Zephyr test while publisher is active
+          chmod +x zephyr.exe
+          build/zephyr/zephyr.exe -stop_at=10
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
@@ -100,39 +123,3 @@ jobs:
             zephyr.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download firmware artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: zephyr_firmware_native_sim
-
-      - name: Install and start MQTT broker
-        run: |
-          sudo apt update
-          sudo apt install -y mosquitto mosquitto-clients
-          sudo systemctl enable mosquitto
-          sudo systemctl start mosquitto
-
-      - name: Run native_sim test with MQTT publisher
-        run: |
-          # Start the MQTT publisher in background
-          timeout 10 bash -c 'while true; do
-            mosquitto_pub -h 192.168.1.100 -t rtest -m "Hello from loop $(date +%T)"
-            sleep 1
-          done' &
-
-          # Run the Zephyr test while publisher is active
-          chmod +x zephyr.exe
-          ./zephyr.exe -stop_at=10 -testargs --tcm-output=xml || true
-          find . -name "tc_output*.xml"
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: test_results_native_sim
-          path: tc_output.xml
-
